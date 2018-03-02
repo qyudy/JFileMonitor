@@ -14,9 +14,11 @@ public class FileMonitor extends AbstractMonitor
 
     public FileMonitor(String fileToMonit, String fileCopyTo) {
         this.fileToMonit = new File(fileToMonit);
+        if (!this.fileToMonit.isAbsolute()) throw new RuntimeException("监视文件必须设置为绝对路径:" + fileToMonit);
         this.fileCopyTo = new File(fileCopyTo);
+        if (!this.fileCopyTo.isAbsolute()) throw new RuntimeException("拷贝文件必须设置为绝对路径:" + fileCopyTo);
         long lastModified;
-        if (this.fileCopyTo.exists() && (lastModified = this.fileToMonit.lastModified()) == this.fileCopyTo.lastModified())
+        if (this.fileToMonit.exists() && this.fileCopyTo.exists() && (lastModified = this.fileToMonit.lastModified()) == this.fileCopyTo.lastModified())
         {
             this.lastModified = lastModified;
         }

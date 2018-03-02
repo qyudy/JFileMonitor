@@ -29,9 +29,12 @@ public class FolderMonitor extends AbstractMonitor
         this.folderToMonit = new ArrayList<File>();
         for (String s : folderToMonit)
         {
-            this.folderToMonit.add(new File(s));
+            File f = new File(s);
+            if (!f.isAbsolute()) throw new RuntimeException("监视文件夹必须设置为绝对路径:" + s);
+            this.folderToMonit.add(f);
         }
         this.folderCopyTo = new File(folderCopyTo);
+        if (!this.folderCopyTo.isAbsolute()) throw new RuntimeException("拷贝文件夹必须设置为绝对路径:" + folderCopyTo);
         this.delIfNotSync = delIfNotSync;
     }
     

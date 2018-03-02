@@ -14,7 +14,9 @@ public class DelMonitor extends AbstractMonitor
         this.toDel = new ArrayList<File>();
         for (String s : toDel)
         {
-            this.toDel.add(new File(s));
+            File f = new File(s);
+            if (!f.isAbsolute()) throw new RuntimeException("文件/文件夹必须设置为绝对路径:" + s);
+            this.toDel.add(f);
         }
     }
 
