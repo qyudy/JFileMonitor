@@ -20,24 +20,20 @@ import java.lang.Thread.UncaughtExceptionHandler;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
-import javax.swing.JTextField;
 import javax.swing.LayoutStyle.ComponentPlacement;
 
-import qyudy.filemonitor.impl.DelMonitor;
-import qyudy.filemonitor.impl.FileMonitor;
-import qyudy.filemonitor.impl.FolderMonitor;
+import qyudy.filemonitor.panel.DelMonitorPanel;
+import qyudy.filemonitor.panel.FileMonitorPanel;
+import qyudy.filemonitor.panel.FolderMonitorPanel;
 
 /**
  * @author qyudy
@@ -47,8 +43,6 @@ public class FileMonitorWindow
 {
 
     private JFrame frame;
-    private JTextField fileToMonitorTextField;
-    private JTextField fileCopyToTextField;
 
     /**
      * Launch the application.
@@ -104,26 +98,26 @@ public class FileMonitorWindow
         JMenu addMenu = new JMenu("新增");
         menuBar.add(addMenu);
 
-        JMenu propMenu = new JMenu("配置");
-        menuBar.add(propMenu);
-
-        JMenuItem loadPropMenuItem = new JMenuItem("读取配置");
-        loadPropMenuItem.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                JOptionPane.showMessageDialog(null, "暂未实现", "暂未实现", JOptionPane.INFORMATION_MESSAGE);
-            }
-        });
-        propMenu.add(loadPropMenuItem);
-
-        JMenuItem savePropMenuItem = new JMenuItem("保存配置");
-        savePropMenuItem.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                JOptionPane.showMessageDialog(null, "暂未实现", "暂未实现", JOptionPane.INFORMATION_MESSAGE);
-            }
-        });
-        propMenu.add(savePropMenuItem);
+//        JMenu propMenu = new JMenu("配置");
+//        menuBar.add(propMenu);
+//
+//        JMenuItem loadPropMenuItem = new JMenuItem("读取配置");
+//        loadPropMenuItem.addMouseListener(new MouseAdapter() {
+//            @Override
+//            public void mousePressed(MouseEvent e) {
+//                JOptionPane.showMessageDialog(null, "暂未实现", "暂未实现", JOptionPane.INFORMATION_MESSAGE);
+//            }
+//        });
+//        propMenu.add(loadPropMenuItem);
+//
+//        JMenuItem savePropMenuItem = new JMenuItem("保存配置");
+//        savePropMenuItem.addMouseListener(new MouseAdapter() {
+//            @Override
+//            public void mousePressed(MouseEvent e) {
+//                JOptionPane.showMessageDialog(null, "暂未实现", "暂未实现", JOptionPane.INFORMATION_MESSAGE);
+//            }
+//        });
+//        propMenu.add(savePropMenuItem);
 
         JMenu helpMenu = new JMenu("帮助");
         menuBar.add(helpMenu);
@@ -201,7 +195,9 @@ public class FileMonitorWindow
             @Override
             public void mousePressed(MouseEvent e) {
                 String title = JOptionPane.showInputDialog("修改名称", tabbedPane.getTitleAt(tabbedPane.getSelectedIndex()));
-                tabbedPane.setTitleAt(tabbedPane.getSelectedIndex(), title);
+                if (title != null) {
+                    tabbedPane.setTitleAt(tabbedPane.getSelectedIndex(), title);
+                }
             }
         });
         popupMenu.add(renameMenuItem);
@@ -275,7 +271,7 @@ public class FileMonitorWindow
         addFolderMonitorMenuItem.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                addFolderMonitor(tabbedPane, pw);
+                new FolderMonitorPanel().addToPane(tabbedPane, pw);
             }
         });
         addMenu.add(addFolderMonitorMenuItem);
@@ -284,7 +280,7 @@ public class FileMonitorWindow
         addFileMonitorMenuItemMenuItem.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                addFileMonitor(tabbedPane, pw);
+                new FileMonitorPanel().addToPane(tabbedPane, pw);
             }
         });
         addMenu.add(addFileMonitorMenuItemMenuItem);
@@ -293,7 +289,7 @@ public class FileMonitorWindow
         addDelMonitorMenuItemMenuItem.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                addDelMonitor(tabbedPane, pw);
+                new DelMonitorPanel().addToPane(tabbedPane, pw);
             }
         });
         addMenu.add(addDelMonitorMenuItemMenuItem);
@@ -312,260 +308,19 @@ public class FileMonitorWindow
             groupLayout.createParallelGroup(Alignment.LEADING)
                 .addGroup(groupLayout.createSequentialGroup()
                     .addContainerGap()
-                    .addComponent(tabbedPane, GroupLayout.DEFAULT_SIZE, 236, Short.MAX_VALUE)
+                    .addComponent(tabbedPane, GroupLayout.PREFERRED_SIZE, 232, Short.MAX_VALUE)
                     .addPreferredGap(ComponentPlacement.RELATED)
-                    .addComponent(resultScrollPane, GroupLayout.DEFAULT_SIZE, 128, Short.MAX_VALUE)
+                    .addComponent(resultScrollPane, GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE)
                     .addContainerGap())
         );
         
-        addFolderMonitor(tabbedPane, pw);
+        new FolderMonitorPanel().addToPane(tabbedPane, pw);
 
-        addFileMonitor(tabbedPane, pw);
+        new FileMonitorPanel().addToPane(tabbedPane, pw);
 
-        addDelMonitor(tabbedPane, pw);
+        new DelMonitorPanel().addToPane(tabbedPane, pw);
         
         frame.getContentPane().setLayout(groupLayout);
     }
 
-    private void addDelMonitor(JTabbedPane tabbedPane, final PrintWriter pw) {
-        JPanel delPanel = new JPanel();
-        delPanel.setBackground(null);
-        delPanel.setOpaque(false);
-        tabbedPane.addTab("删除监视器", null, delPanel, null);
-        
-        JLabel label_8 = new JLabel("文件/文件夹");
-        
-        JScrollPane delScrollPane = new JScrollPane();
-        
-        final JTextArea delMonitTextArea = new JTextArea();
-        delScrollPane.setViewportView(delMonitTextArea);
-        
-        final JButton delStartButton = new JButton("start");
-        final DelMonitor[] delMonitor = new DelMonitor[1];
-        delStartButton.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (delStartButton.isEnabled())
-                {
-                    delMonitor[0] = new DelMonitor(delMonitTextArea.getText().split("\\n|\\r\\n"));
-                    delMonitor[0].setLogger(pw);
-                    delMonitor[0].startAsync();
-                    delStartButton.setEnabled(false);
-                    delStartButton.setText("stop");
-                }
-                else
-                {
-                    if (delMonitor[0] != null)
-                    {
-                        delMonitor[0].stop();
-                        delMonitor[0] = null;
-                    }
-                    delStartButton.setEnabled(true);
-                    delStartButton.setText("start");
-                }
-            }
-        });
-        GroupLayout delGroupLayout = new GroupLayout(delPanel);
-        delGroupLayout.setHorizontalGroup(
-            delGroupLayout.createParallelGroup(Alignment.LEADING)
-                .addGroup(delGroupLayout.createSequentialGroup()
-                    .addContainerGap()
-                    .addComponent(label_8)
-                    .addPreferredGap(ComponentPlacement.RELATED)
-                    .addGroup(delGroupLayout.createParallelGroup(Alignment.LEADING)
-                        .addComponent(delStartButton, GroupLayout.PREFERRED_SIZE, 94, GroupLayout.PREFERRED_SIZE)
-                        .addComponent(delScrollPane, GroupLayout.DEFAULT_SIZE, 469, Short.MAX_VALUE))
-                    .addContainerGap())
-        );
-        delGroupLayout.setVerticalGroup(
-            delGroupLayout.createParallelGroup(Alignment.LEADING)
-                .addGroup(delGroupLayout.createSequentialGroup()
-                    .addContainerGap()
-                    .addGroup(delGroupLayout.createParallelGroup(Alignment.LEADING)
-                        .addComponent(delScrollPane, GroupLayout.PREFERRED_SIZE, 134, GroupLayout.PREFERRED_SIZE)
-                        .addComponent(label_8))
-                    .addPreferredGap(ComponentPlacement.RELATED)
-                    .addComponent(delStartButton, GroupLayout.PREFERRED_SIZE, 33, GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap(24, Short.MAX_VALUE))
-        );
-        delPanel.setLayout(delGroupLayout);
-    }
-
-    private void addFileMonitor(JTabbedPane tabbedPane, final PrintWriter pw) {
-        JPanel filePanel = new JPanel();
-        filePanel.setBackground(null);
-        filePanel.setOpaque(false);
-        tabbedPane.addTab("文件监视器", null, filePanel, null);
-        
-        JLabel label_3 = new JLabel("监视文件");
-        
-        fileToMonitorTextField = new JTextField();
-        fileToMonitorTextField.setColumns(10);
-        
-        JLabel lblNewLabel = new JLabel("拷贝路径");
-        
-        fileCopyToTextField = new JTextField();
-        fileCopyToTextField.setColumns(10);
-        
-        final JButton fileStartButton = new JButton("start");
-        final FileMonitor[] fileMonitor = new FileMonitor[1];
-        fileStartButton.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (fileStartButton.isEnabled())
-                {
-                    fileMonitor[0] = new FileMonitor(fileToMonitorTextField.getText(), fileCopyToTextField.getText());
-                    fileMonitor[0].setLogger(pw);
-                    fileMonitor[0].startAsync();
-                    fileStartButton.setEnabled(false);
-                    fileStartButton.setText("stop");
-                }
-                else
-                {
-                    if (fileMonitor[0] != null)
-                    {
-                        fileMonitor[0].stop();
-                        fileMonitor[0] = null;
-                    }
-                    fileStartButton.setEnabled(true);
-                    fileStartButton.setText("start");
-                }
-            }
-        });
-        GroupLayout filerGroupLayout = new GroupLayout(filePanel);
-        filerGroupLayout.setHorizontalGroup(
-            filerGroupLayout.createParallelGroup(Alignment.LEADING)
-                .addGroup(filerGroupLayout.createSequentialGroup()
-                    .addContainerGap()
-                    .addGroup(filerGroupLayout.createParallelGroup(Alignment.LEADING)
-                        .addGroup(filerGroupLayout.createSequentialGroup()
-                            .addComponent(label_3)
-                            .addPreferredGap(ComponentPlacement.RELATED)
-                            .addComponent(fileToMonitorTextField, GroupLayout.DEFAULT_SIZE, 487, Short.MAX_VALUE))
-                        .addGroup(filerGroupLayout.createSequentialGroup()
-                            .addComponent(lblNewLabel)
-                            .addPreferredGap(ComponentPlacement.RELATED)
-                            .addGroup(filerGroupLayout.createParallelGroup(Alignment.LEADING)
-                                .addComponent(fileStartButton, GroupLayout.PREFERRED_SIZE, 91, GroupLayout.PREFERRED_SIZE)
-                                .addComponent(fileCopyToTextField, GroupLayout.DEFAULT_SIZE, 493, Short.MAX_VALUE))))
-                    .addGap(4))
-        );
-        filerGroupLayout.setVerticalGroup(
-            filerGroupLayout.createParallelGroup(Alignment.LEADING)
-                .addGroup(filerGroupLayout.createSequentialGroup()
-                    .addContainerGap()
-                    .addGroup(filerGroupLayout.createParallelGroup(Alignment.BASELINE)
-                        .addComponent(label_3)
-                        .addComponent(fileToMonitorTextField, GroupLayout.PREFERRED_SIZE, 18, GroupLayout.PREFERRED_SIZE))
-                    .addPreferredGap(ComponentPlacement.RELATED)
-                    .addGroup(filerGroupLayout.createParallelGroup(Alignment.BASELINE)
-                        .addComponent(lblNewLabel)
-                        .addComponent(fileCopyToTextField, GroupLayout.PREFERRED_SIZE, 18, GroupLayout.PREFERRED_SIZE))
-                    .addGap(18)
-                    .addComponent(fileStartButton)
-                    .addContainerGap(114, Short.MAX_VALUE))
-        );
-        filePanel.setLayout(filerGroupLayout);
-    }
-
-    private void addFolderMonitor(JTabbedPane tabbedPane, final PrintWriter pw) {
-        JPanel folderPanel = new JPanel();
-        folderPanel.setBackground(null);
-        folderPanel.setOpaque(false);
-        tabbedPane.addTab("文件夹监视器", null, folderPanel, null);
-        
-//        JPanel folderTab = new JPanel();
-//        folderTab.setBackground(null);
-//        folderTab.setOpaque(false);
-//        JLabel folderTitleLabel = new JLabel("文件夹监视器");
-//        folderTitleLabel.setBackground(null);
-//        folderTitleLabel.setOpaque(false);
-//        folderTab.add(folderTitleLabel);
-//        JButton folderCloseButton = new JButton("x");
-//        folderCloseButton.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
-//        folderTab.add(folderCloseButton);
-//        tabbedPane.setTabComponentAt(tabbedPane.indexOfComponent(folderPanel), folderTab);
-        
-        JLabel label = new JLabel("监视目录");
-
-        JScrollPane folderMonitScrollPane = new JScrollPane();
-        
-        final JTextArea folderMonitTextArea = new JTextArea();
-        folderMonitScrollPane.setViewportView(folderMonitTextArea);
-
-        JLabel label_1 = new JLabel("拷贝目录");
-        
-        final JTextField folderCopyToTextField = new JTextField(50);
-        
-        final JCheckBox folderDelIfNotSyncCheckBox = new JCheckBox("同步删除 *慎用");
-        folderDelIfNotSyncCheckBox.setBackground(null);
-        folderDelIfNotSyncCheckBox.setOpaque(false);
-        
-        final JButton folderStartButton = new JButton("start");
-        final FolderMonitor[] folderMonitor = new FolderMonitor[1];
-        folderStartButton.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (folderStartButton.isEnabled())
-                {
-                    folderMonitor[0] = new FolderMonitor(folderMonitTextArea.getText().split("\\n|\\r\\n"), folderCopyToTextField.getText(), folderDelIfNotSyncCheckBox.isSelected());
-                    folderMonitor[0].setLogger(pw);
-                    folderMonitor[0].startAsync();
-                    folderStartButton.setEnabled(false);
-                    folderStartButton.setText("stop");
-                }
-                else
-                {
-                    if (folderMonitor[0] != null)
-                    {
-                        folderMonitor[0].stop();
-                        folderMonitor[0] = null;
-                    }
-                    folderStartButton.setEnabled(true);
-                    folderStartButton.setText("start");
-                }
-            }
-        });
-        
-        GroupLayout folderGroupLayout = new GroupLayout(folderPanel);
-        folderGroupLayout.setHorizontalGroup(
-            folderGroupLayout.createParallelGroup(Alignment.TRAILING)
-                .addGroup(folderGroupLayout.createSequentialGroup()
-                    .addContainerGap()
-                    .addGroup(folderGroupLayout.createParallelGroup(Alignment.LEADING)
-                        .addGroup(folderGroupLayout.createSequentialGroup()
-                            .addComponent(label)
-                            .addPreferredGap(ComponentPlacement.RELATED)
-                            .addGroup(folderGroupLayout.createParallelGroup(Alignment.TRAILING)
-                                .addComponent(folderMonitScrollPane, GroupLayout.DEFAULT_SIZE, 487, Short.MAX_VALUE)
-                                .addGroup(Alignment.LEADING, folderGroupLayout.createSequentialGroup()
-                                    .addComponent(folderDelIfNotSyncCheckBox)
-                                    .addGap(36)
-                                    .addComponent(folderStartButton, GroupLayout.PREFERRED_SIZE, 94, GroupLayout.PREFERRED_SIZE))))
-                        .addGroup(Alignment.TRAILING, folderGroupLayout.createSequentialGroup()
-                            .addComponent(label_1)
-                            .addPreferredGap(ComponentPlacement.RELATED)
-                            .addComponent(folderCopyToTextField, GroupLayout.DEFAULT_SIZE, 487, Short.MAX_VALUE)))
-                    .addContainerGap())
-        );
-        folderGroupLayout.setVerticalGroup(
-            folderGroupLayout.createParallelGroup(Alignment.LEADING)
-                .addGroup(folderGroupLayout.createSequentialGroup()
-                    .addContainerGap()
-                    .addGroup(folderGroupLayout.createParallelGroup(Alignment.LEADING)
-                        .addGroup(folderGroupLayout.createSequentialGroup()
-                            .addComponent(folderMonitScrollPane, GroupLayout.PREFERRED_SIZE, 116, GroupLayout.PREFERRED_SIZE)
-                            .addPreferredGap(ComponentPlacement.RELATED)
-                            .addGroup(folderGroupLayout.createParallelGroup(Alignment.BASELINE)
-                                .addComponent(folderCopyToTextField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                                .addComponent(label_1))
-                            .addGap(10)
-                            .addGroup(folderGroupLayout.createParallelGroup(Alignment.BASELINE)
-                                .addComponent(folderStartButton, GroupLayout.PREFERRED_SIZE, 33, GroupLayout.PREFERRED_SIZE)
-                                .addComponent(folderDelIfNotSyncCheckBox))
-                            .addContainerGap(21, Short.MAX_VALUE))
-                        .addComponent(label)))
-        );
-        folderPanel.setLayout(folderGroupLayout);
-    }
 }

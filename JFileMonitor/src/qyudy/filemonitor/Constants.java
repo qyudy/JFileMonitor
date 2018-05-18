@@ -1,5 +1,5 @@
 package qyudy.filemonitor;
 
 public interface Constants {
-	String version = "0.98";
+	String version = "1.00";
 }
