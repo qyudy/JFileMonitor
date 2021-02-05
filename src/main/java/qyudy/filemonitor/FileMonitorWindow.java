@@ -1,6 +1,3 @@
-/**
- * 
- */
 package qyudy.filemonitor;
 
 import qyudy.filemonitor.panel.DelMonitorPanel;
@@ -15,30 +12,28 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.*;
 import java.lang.Thread.UncaughtExceptionHandler;
+import java.nio.charset.StandardCharsets;
 
 /**
  * @author qyudy
  *
  */
-public class FileMonitorWindow
-{
+public class FileMonitorWindow {
 
     private JFrame frame;
+
+    private static final String CONFIG_FILE = "config";
 
     /**
      * Launch the application.
      */
     public static void main(String[] args) {
-        EventQueue.invokeLater(new Runnable()
-        {
+        EventQueue.invokeLater(new Runnable() {
             public void run() {
-                try
-                {
+                try {
                     FileMonitorWindow window = new FileMonitorWindow();
                     window.frame.setVisible(true);
-                }
-                catch (Exception e)
-                {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
@@ -66,39 +61,23 @@ public class FileMonitorWindow
                 }
             }
         });
-        
+
         frame = new JFrame();
         frame.setTitle("JFileMonitor " + qyudy.filemonitor.Constants.version);
         frame.setMinimumSize(new Dimension(600, 450));
         frame.setLocationRelativeTo(null);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
+        final JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+
         JMenuBar menuBar = new JMenuBar();
         frame.setJMenuBar(menuBar);
-        
+
         JMenu addMenu = new JMenu("新增");
         menuBar.add(addMenu);
 
-//        JMenu propMenu = new JMenu("配置");
-//        menuBar.add(propMenu);
-//
-//        JMenuItem loadPropMenuItem = new JMenuItem("读取配置");
-//        loadPropMenuItem.addMouseListener(new MouseAdapter() {
-//            @Override
-//            public void mousePressed(MouseEvent e) {
-//                JOptionPane.showMessageDialog(null, "暂未实现", "暂未实现", JOptionPane.INFORMATION_MESSAGE);
-//            }
-//        });
-//        propMenu.add(loadPropMenuItem);
-//
-//        JMenuItem savePropMenuItem = new JMenuItem("保存配置");
-//        savePropMenuItem.addMouseListener(new MouseAdapter() {
-//            @Override
-//            public void mousePressed(MouseEvent e) {
-//                JOptionPane.showMessageDialog(null, "暂未实现", "暂未实现", JOptionPane.INFORMATION_MESSAGE);
-//            }
-//        });
-//        propMenu.add(savePropMenuItem);
+        JMenu propMenu = new JMenu("配置");
+        menuBar.add(propMenu);
 
         JMenu helpMenu = new JMenu("帮助");
         menuBar.add(helpMenu);
@@ -108,25 +87,18 @@ public class FileMonitorWindow
             @Override
             public void mousePressed(MouseEvent e) {
                 try (InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream("readme.txt");
-                        FileOutputStream out = new FileOutputStream("readme.txt"))
-                {
+                     FileOutputStream out = new FileOutputStream("readme.txt")) {
                     byte[] bs = new byte[1024 * 100];
                     int count = 0;
-                    while ((count = in.read(bs)) > 0)
-                    {
+                    while ((count = in.read(bs)) > 0) {
                         out.write(bs, 0, count);
                     }
-                }
-                catch (IOException e1)
-                {
+                } catch (IOException e1) {
                     e1.printStackTrace();
                 }
-                try
-                {
+                try {
                     java.awt.Desktop.getDesktop().open(new File("readme.txt"));
-                }
-                catch (IOException e1)
-                {
+                } catch (IOException e1) {
                     e1.printStackTrace();
                 }
             }
@@ -141,14 +113,12 @@ public class FileMonitorWindow
             }
         });
         helpMenu.add(aboutMenuItem);
-        
-        final JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+
         tabbedPane.setBackground(null);
         tabbedPane.setOpaque(false);
         JPopupMenu popupMenu = new JPopupMenu();
         JMenuItem moveLeftMenuItem = new JMenuItem("左移");
-        moveLeftMenuItem.addMouseListener(new MouseAdapter()
-        {
+        moveLeftMenuItem.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 int index = tabbedPane.getSelectedIndex();
@@ -159,8 +129,7 @@ public class FileMonitorWindow
         });
         popupMenu.add(moveLeftMenuItem);
         JMenuItem moveRightMenuItem = new JMenuItem("右移");
-        moveRightMenuItem.addMouseListener(new MouseAdapter()
-        {
+        moveRightMenuItem.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 int index = tabbedPane.getSelectedIndex();
@@ -171,8 +140,7 @@ public class FileMonitorWindow
         });
         popupMenu.add(moveRightMenuItem);
         JMenuItem renameMenuItem = new JMenuItem("改名");
-        renameMenuItem.addMouseListener(new MouseAdapter()
-        {
+        renameMenuItem.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 String title = JOptionPane.showInputDialog("修改名称", tabbedPane.getTitleAt(tabbedPane.getSelectedIndex()));
@@ -183,21 +151,15 @@ public class FileMonitorWindow
         });
         popupMenu.add(renameMenuItem);
         JMenuItem closeMenuItem = new JMenuItem("关闭");
-        closeMenuItem.addMouseListener(new MouseAdapter()
-        {
+        closeMenuItem.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 Container selected = (Container) tabbedPane.getSelectedComponent();
-                for (Component c : selected.getComponents())
-                {
-                    if (c instanceof JButton)
-                    {
-                        if (((JButton) c).isEnabled())
-                        {
+                for (Component c : selected.getComponents()) {
+                    if (c instanceof JButton) {
+                        if (((JButton) c).isEnabled()) {
                             tabbedPane.remove(tabbedPane.getSelectedComponent());
-                        }
-                        else
-                        {
+                        } else {
                             JOptionPane.showMessageDialog(selected, "删除监视器前需要先停止它");
                         }
                         break;
@@ -207,100 +169,154 @@ public class FileMonitorWindow
         });
         popupMenu.add(closeMenuItem);
         tabbedPane.setComponentPopupMenu(popupMenu);
-        
+
         JScrollPane resultScrollPane = new JScrollPane();
-        
+
         final JTextArea resultTextArea = new JTextArea();
         resultScrollPane.setViewportView(resultTextArea);
-        
-        final PrintWriter pw = new PrintWriter(new Writer()
-        {
+
+        final PrintWriter pw = new PrintWriter(new Writer() {
             private char[] cs = new char[1024 * 100];
             private int length = 0;
+
             @Override
             public void write(char[] cbuf, int off, int len) throws IOException {
-                while (len > 0)
-                {
+                while (len > 0) {
                     int readLen = Math.min(cs.length - length, len);
                     System.arraycopy(cbuf, off, cs, length, readLen);
                     length += readLen;
                     len -= readLen;
-                    if (len > 0)
-                    {
+                    if (len > 0) {
                         flush();
                     }
                 }
                 flush();
             }
-            
+
             @Override
             public void flush() throws IOException {
-                if (length > 0)
-                {
+                if (length > 0) {
                     resultTextArea.append(new String(cs, 0, length));
                 }
                 length = 0;
             }
-            
+
             @Override
             public void close() throws IOException {
                 flush();
             }
         });
-        
+
+        JMenuItem loadPropMenuItem = new JMenuItem("读取配置");
+        Runnable loadProp = new Runnable() {
+            @Override
+            public void run() {
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(CONFIG_FILE), StandardCharsets.UTF_8))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        if (DelMonitorPanel.matchConfig(line)) {
+                            DelMonitorPanel delMonitorPanel = new DelMonitorPanel();
+                            delMonitorPanel.addToPane(tabbedPane, line, pw);
+                        } else if (FileMonitorPanel.matchConfig(line)) {
+                            FileMonitorPanel fileMonitorPanel = new FileMonitorPanel();
+                            fileMonitorPanel.addToPane(tabbedPane, line, pw);
+                        } else if (FolderMonitorPanel.matchConfig(line)) {
+                            FolderMonitorPanel folderMonitorPanel = new FolderMonitorPanel();
+                            folderMonitorPanel.addToPane(tabbedPane, line, pw);
+                        }
+                    }
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        };
+        loadPropMenuItem.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                loadProp.run();
+            }
+        });
+        propMenu.add(loadPropMenuItem);
+
+        JMenuItem savePropMenuItem = new JMenuItem("保存配置");
+        savePropMenuItem.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                StringBuilder configs = new StringBuilder();
+                for (Component component : tabbedPane.getComponents()) {
+                    if (component instanceof IMonitor) {
+                        String config = ((IMonitor) component).getConfig();
+                        if (config != null) {
+                            configs.append(config).append('\n');
+                        }
+                    }
+                }
+                try (FileOutputStream out = new FileOutputStream(CONFIG_FILE)) {
+                    out.write(configs.toString().getBytes(StandardCharsets.UTF_8));
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+        propMenu.add(savePropMenuItem);
+
         JMenuItem addFolderMonitorMenuItem = new JMenuItem("文件夹监视器");
         addFolderMonitorMenuItem.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                new FolderMonitorPanel().addToPane(tabbedPane, pw);
+                new FolderMonitorPanel().addToPane(tabbedPane, null, pw);
             }
         });
         addMenu.add(addFolderMonitorMenuItem);
-        
+
         JMenuItem addFileMonitorMenuItemMenuItem = new JMenuItem("文件监视器");
         addFileMonitorMenuItemMenuItem.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                new FileMonitorPanel().addToPane(tabbedPane, pw);
+                new FileMonitorPanel().addToPane(tabbedPane, null, pw);
             }
         });
         addMenu.add(addFileMonitorMenuItemMenuItem);
-        
+
         JMenuItem addDelMonitorMenuItemMenuItem = new JMenuItem("删除监视器");
         addDelMonitorMenuItemMenuItem.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                new DelMonitorPanel().addToPane(tabbedPane, pw);
+                new DelMonitorPanel().addToPane(tabbedPane, null, pw);
             }
         });
         addMenu.add(addDelMonitorMenuItemMenuItem);
-        
+
         GroupLayout groupLayout = new GroupLayout(frame.getContentPane());
         groupLayout.setHorizontalGroup(
-            groupLayout.createParallelGroup(Alignment.TRAILING)
-                .addGroup(groupLayout.createSequentialGroup()
-                    .addContainerGap()
-                    .addGroup(groupLayout.createParallelGroup(Alignment.TRAILING)
-                        .addComponent(resultScrollPane, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 564, Short.MAX_VALUE)
-                        .addComponent(tabbedPane, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 564, Short.MAX_VALUE))
-                    .addContainerGap())
+                groupLayout.createParallelGroup(Alignment.TRAILING)
+                        .addGroup(groupLayout.createSequentialGroup()
+                                .addContainerGap()
+                                .addGroup(groupLayout.createParallelGroup(Alignment.TRAILING)
+                                        .addComponent(resultScrollPane, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 564, Short.MAX_VALUE)
+                                        .addComponent(tabbedPane, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 564, Short.MAX_VALUE))
+                                .addContainerGap())
         );
         groupLayout.setVerticalGroup(
-            groupLayout.createParallelGroup(Alignment.LEADING)
-                .addGroup(groupLayout.createSequentialGroup()
-                    .addContainerGap()
-                    .addComponent(tabbedPane, GroupLayout.PREFERRED_SIZE, 232, Short.MAX_VALUE)
-                    .addPreferredGap(ComponentPlacement.RELATED)
-                    .addComponent(resultScrollPane, GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE)
-                    .addContainerGap())
+                groupLayout.createParallelGroup(Alignment.LEADING)
+                        .addGroup(groupLayout.createSequentialGroup()
+                                .addContainerGap()
+                                .addComponent(tabbedPane, GroupLayout.PREFERRED_SIZE, 232, Short.MAX_VALUE)
+                                .addPreferredGap(ComponentPlacement.RELATED)
+                                .addComponent(resultScrollPane, GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE)
+                                .addContainerGap())
         );
-        
-        new FolderMonitorPanel().addToPane(tabbedPane, pw);
 
-        new FileMonitorPanel().addToPane(tabbedPane, pw);
+        if (new File(CONFIG_FILE).exists()) {
+            loadProp.run();
+        } else {
+            new FolderMonitorPanel().addToPane(tabbedPane, null, pw);
 
-        new DelMonitorPanel().addToPane(tabbedPane, pw);
-        
+            new FileMonitorPanel().addToPane(tabbedPane, null,pw);
+
+            new DelMonitorPanel().addToPane(tabbedPane, null,pw);
+        }
+
         frame.getContentPane().setLayout(groupLayout);
     }
 
